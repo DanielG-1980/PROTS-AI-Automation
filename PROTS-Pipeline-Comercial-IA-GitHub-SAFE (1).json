@@ -1,0 +1,1443 @@
+{
+  "name": "PROTS - Pipeline Comercial IA",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "27b1226e-b421-43f9-9b6f-faba50c4952e",
+              "name": "empresa",
+              "value": "Metalúrgica Patagonia",
+              "type": "string"
+            },
+            {
+              "id": "1e93d671-739d-47f8-8ff4-9222a756e332",
+              "name": "contacto",
+              "value": "Juan Pérez",
+              "type": "string"
+            },
+            {
+              "id": "020be79b-9d5a-4e56-b204-8b3fa8fe4bbd",
+              "name": "email",
+              "value": "jperez@empresa.com",
+              "type": "string"
+            },
+            {
+              "id": "077dfa52-1781-48a3-94b0-27fbdf7dccf4",
+              "name": "prioridad",
+              "value": "Alta",
+              "type": "string"
+            },
+            {
+              "id": "4caa4a4b-86a7-456e-a15b-4cffd0e5ecb6",
+              "name": "descripcion",
+              "value": "Solicita presupuesto para nave industrial de 2500 m²",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -368,
+        -64
+      ],
+      "id": "99fe1979-52ab-481e-9362-fd7eec64cae4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prots-nuevo-prospecto",
+        "options": {
+          "responseCode": {
+            "values": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -64
+      ],
+      "id": "465ed3b0-4425-4ee4-a58e-385273d42b15",
+      "name": "Webhook Nuevo Prospecto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "eac77152-d4d1-4795-9c32-714b46df53d8",
+              "leftValue": "={{$json.empresa}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "21ca9f67-dcc2-4fd9-8e53-46e70d0ce056",
+              "leftValue": "={{$json.contacto}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "98dff07d-fd03-47f0-80e0-d4fe63c45296",
+              "leftValue": "={{$json.email}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -144,
+        -64
+      ],
+      "id": "b7903b64-98f2-4e73-a84d-09b2f901adfe",
+      "name": "IF - Validar Datos"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL2UXUD0V",
+          "mode": "list",
+          "cachedResultName": "errores"
+        },
+        "text": "={{ `❌ ERROR EN EL PIPELINE COMERCIAL  📅 ${$now}  🏢 Empresa: ${$('Edit Fields').item.json.empresa || \"No informada\"}  👤 Contacto: ${$('Edit Fields').item.json.contacto || \"No informado\"}  📧 Email: ${$('Edit Fields').item.json.email || \"No informado\"}  ⚠ Motivo: El prospecto fue rechazado porque faltan datos obligatorios.  🤖 Workflow: PROTS Pipeline Comercial IA  ❌ No se creó ningún registro en Airtable.` }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        -16,
+        144
+      ],
+      "id": "aba2608e-dcd2-4f06-9b16-c365e09a98ca",
+      "name": "Slack Error"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appVE7CMnAZF3f61F",
+          "mode": "list",
+          "cachedResultName": "PROTS CRM IA",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmXZs8uPufWjXJf",
+          "mode": "list",
+          "cachedResultName": "Prospectos",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F/tblmXZs8uPufWjXJf"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nombre del Prospecto": "={{$json.contacto}}",
+            "Empresa": "={{$json.empresa}}",
+            "Correo Electrónico": "={{$json.email}}",
+            "Fuente de Origen": "Formulario Web",
+            "Puntuación de Calificación": 80,
+            "Estado en el Pipeline": "Nuevo",
+            "Score IA": "={{$json.score_ia}}",
+            "Notas de Prospecto": "={{$json.descripcion}}",
+            "Acción Recomendada": "={{$json.accion_recomendada}}",
+            "Clasificación IA": "={{$json.clasificacion_ia}}",
+            "Resumen IA": "={{$json.resumen_ia}}",
+            "Estado de Aprobación": "Pendiente"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nombre del Prospecto",
+              "displayName": "Nombre del Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Correo Electrónico",
+              "displayName": "Correo Electrónico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Teléfono",
+              "displayName": "Teléfono",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fuente de Origen",
+              "displayName": "Fuente de Origen",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Puntuación de Calificación",
+              "displayName": "Puntuación de Calificación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Propietario Asignado",
+              "displayName": "Propietario Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado en el Pipeline",
+              "displayName": "Estado en el Pipeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "En contacto",
+                  "value": "En contacto"
+                },
+                {
+                  "name": "Calificado",
+                  "value": "Calificado"
+                },
+                {
+                  "name": "Descartado",
+                  "value": "Descartado"
+                },
+                {
+                  "name": "Contacto Inicial",
+                  "value": "Contacto Inicial"
+                },
+                {
+                  "name": "Negociación",
+                  "value": "Negociación"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de Creación",
+              "displayName": "Fecha de Creación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Notas de Prospecto",
+              "displayName": "Notas de Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Interés Inicial",
+              "displayName": "Interés Inicial",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Bajo",
+                  "value": "Bajo"
+                },
+                {
+                  "name": "Medio",
+                  "value": "Medio"
+                },
+                {
+                  "name": "Alto",
+                  "value": "Alto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Clasificación IA",
+              "displayName": "Clasificación IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                },
+                {
+                  "name": "Urgente",
+                  "value": "Urgente"
+                },
+                {
+                  "name": "Normal",
+                  "value": "Normal"
+                },
+                {
+                  "name": "Baja Prioridad",
+                  "value": "Baja Prioridad"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Score IA",
+              "displayName": "Score IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Resumen IA",
+              "displayName": "Resumen IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Acción Recomendada",
+              "displayName": "Acción Recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado de Aprobación",
+              "displayName": "Estado de Aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Aprobado",
+                  "value": "Aprobado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado por",
+              "displayName": "Aprobado por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de aprobación",
+              "displayName": "Fecha de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Observaciones de aprobación",
+              "displayName": "Observaciones de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        272,
+        -64
+      ],
+      "id": "698e9a69-c93b-440c-bb90-2627101d928f",
+      "name": "Airtable Prospectos"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0BL67QSZD0",
+          "mode": "list",
+          "cachedResultName": "automatizacion"
+        },
+        "text": "🚀 Nuevo Prospecto  👤 Juan Pérez  🏢 Metalúrgica Patagonia  📧 jperez@empresa.com  ⚡ Prioridad: Alta  📝 Solicita presupuesto para nave industrial de 2500 m²",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.5,
+      "position": [
+        1040,
+        48
+      ],
+      "id": "5acdd1ac-310f-4b3a-beaa-762039238da8",
+      "name": "Slack Confirmacion"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_OPENROUTER_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-OpenRouter-Title",
+              "value": "PROTS Pipeline Comercial IA"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    model: \"openai/gpt-oss-20b:free\",\n    messages: [\n      {\n        role: \"system\",\n        content:\n          \"Eres un Analista Comercial Senior de PROTS SRL. \" +\n          \"Devuelve exclusivamente un objeto JSON válido, \" +\n          \"sin Markdown, introducciones ni explicaciones.\"\n      },\n      {\n        role: \"user\",\n        content:\n          \"Analiza este prospecto comercial:\\n\\n\" +\n          \"Empresa: \" + $(\"Edit Fields\").item.json.empresa + \"\\n\" +\n          \"Contacto: \" + $(\"Edit Fields\").item.json.contacto + \"\\n\" +\n          \"Email: \" + $(\"Edit Fields\").item.json.email + \"\\n\" +\n          \"Prioridad: \" + $(\"Edit Fields\").item.json.prioridad + \"\\n\" +\n          \"Descripción: \" + $(\"Edit Fields\").item.json.descripcion + \"\\n\\n\" +\n          \"La clasificacion debe ser exactamente VIP, Urgente, Normal o Baja Prioridad.\\n\" +\n          \"El score debe ser un número entero entre 0 y 100.\\n\\n\" +\n          \"Devuelve exactamente:\\n\" +\n          \"{\\\"clasificacion\\\":\\\"\\\",\\\"score\\\":0,\\\"resumen\\\":\\\"\\\",\\\"accion\\\":\\\"\\\"}\"\n      }\n    ],\n    response_format: {\n      type: \"json_object\"\n    },\n    reasoning: {\n      effort: \"minimal\",\n      exclude: true\n    },\n    temperature: 0.1,\n    max_tokens: 1000,\n    stream: false\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -240
+      ],
+      "id": "1fc9dff2-d530-4d14-af41-e455e974d6ac",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const message = $json?.choices?.[0]?.message;\n\nif (!message) {\n  throw new Error(\n    `OpenRouter no devolvió message: ${JSON.stringify($json)}`\n  );\n}\n\nlet content = message.content;\n\nif (Array.isArray(content)) {\n  content = content\n    .map((part) => part?.text || part?.content || \"\")\n    .join(\"\");\n}\n\nconst text = String(content || \"\")\n  .replace(/```json/gi, \"\")\n  .replace(/```/g, \"\")\n  .trim();\n\nif (!text) {\n  throw new Error(\"OpenRouter devolvió contenido vacío\");\n}\n\nlet analysis;\n\n// Primer intento: interpretar JSON normal.\ntry {\n  analysis = JSON.parse(text);\n} catch {\n  // Segundo intento: extraer valores aunque el JSON venga mal formado.\n  const getString = (field) => {\n    const regex = new RegExp(\n      `\"${field}\"\\\\s*:\\\\s*\"([\\\\s\\\\S]*?)\"(?=\\\\s*,\\\\s*\"|\\\\s*})`,\n      \"i\"\n    );\n\n    return text.match(regex)?.[1]\n      ?.replace(/\\\\\"/g, '\"')\n      ?.trim() || \"\";\n  };\n\n  const scoreMatch = text.match(\n    /\"score\"\\s*:\\s*\"?(\\d{1,3})\"?/i\n  );\n\n  analysis = {\n    clasificacion: getString(\"clasificacion\"),\n    score: scoreMatch ? Number(scoreMatch[1]) : 0,\n    resumen: getString(\"resumen\"),\n    accion: getString(\"accion\"),\n  };\n}\n\nconst classifications = {\n  vip: \"VIP\",\n  urgente: \"Urgente\",\n  normal: \"Normal\",\n  \"baja prioridad\": \"Baja Prioridad\",\n};\n\nconst classificationKey = String(\n  analysis.clasificacion || \"\"\n)\n  .trim()\n  .toLowerCase();\n\nconst clasificacion =\n  classifications[classificationKey] || \"Normal\";\n\nconst score = Math.max(\n  0,\n  Math.min(100, Number(analysis.score) || 0)\n);\n\nconst original = $(\"Edit Fields\").item.json;\n\nreturn [\n  {\n    json: {\n      empresa: original.empresa,\n      contacto: original.contacto,\n      email: original.email,\n      prioridad: original.prioridad,\n      descripcion: original.descripcion,\n      clasificacion_ia: clasificacion,\n      score_ia: score,\n      resumen_ia: String(analysis.resumen || \"\").trim(),\n      accion_recomendada: String(\n        analysis.accion || \"\"\n      ).trim(),\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "839ae5de-d502-4014-be9f-ab4caf64451d",
+      "name": "Procesar Respuesta OpenRouter"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "danielgilardi1980@gmail.com",
+        "subject": "={{ `Aprobación requerida | ${$('Procesar Respuesta OpenRouter').item.json.empresa}` }}",
+        "message": "={{ `Se requiere validación humana para continuar con el prospecto.\n\nEmpresa: ${$('Procesar Respuesta OpenRouter').item.json.empresa}\nContacto: ${$('Procesar Respuesta OpenRouter').item.json.contacto}\nEmail: ${$('Procesar Respuesta OpenRouter').item.json.email}\n\nClasificación IA: ${$('Procesar Respuesta OpenRouter').item.json.clasificacion_ia}\nScore IA: ${$('Procesar Respuesta OpenRouter').item.json.score_ia}/100\n\nResumen:\n${$('Procesar Respuesta OpenRouter').item.json.resumen_ia}\n\nAcción recomendada:\n${$('Procesar Respuesta OpenRouter').item.json.accion_recomendada}\n\nRevise la información y seleccione Aprobar o Rechazar.` }}",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Aprobar prospecto",
+            "disapproveLabel": "Rechazar prospecto"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        -64
+      ],
+      "id": "04a81373-c292-4b15-8571-19321e0a0104",
+      "name": "Solicitar Aprobación Gerencia"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5c052e89-a747-4042-b7de-b9d757f39c9e",
+              "leftValue": "={{$json.data.approved}}",
+              "rightValue": "el valor que aparezca al aprobar, normalmente approved, approve o true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        608,
+        -64
+      ],
+      "id": "4986b0dc-0ec3-40f3-8aae-e40139ddafde",
+      "name": "Prospecto Aprobado"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$('Procesar Respuesta OpenRouter').item.json.email}}",
+        "subject": "=PROTS SRL - Recepción de solicitud",
+        "message": "=Hola {{$('Procesar Respuesta OpenRouter').item.json.contacto}},\n\nHemos recibido correctamente su solicitud.\n\nNuestro equipo comercial ya comenzó el análisis.\n\nEn breve un asesor se pondrá en contacto.\n\nSaludos.\n\nPROTS SRL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        928,
+        -176
+      ],
+      "id": "5f6bad5a-9231-48e7-9ade-74de669089ea",
+      "name": "Enviar correo al prospecto"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appVE7CMnAZF3f61F",
+          "mode": "list",
+          "cachedResultName": "PROTS CRM IA",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmXZs8uPufWjXJf",
+          "mode": "list",
+          "cachedResultName": "Prospectos",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F/tblmXZs8uPufWjXJf"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado de Aprobación": "Aprobado",
+            "id": "={{ $('Airtable Prospectos').item.json.id }}",
+            "Fecha de aprobación": "={{ new Date().toISOString() }}",
+            "Aprobado por": "Gerencia PROTS",
+            "Observaciones de aprobación": "Aprobado por Gerencia"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre del Prospecto",
+              "displayName": "Nombre del Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Correo Electrónico",
+              "displayName": "Correo Electrónico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Teléfono",
+              "displayName": "Teléfono",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fuente de Origen",
+              "displayName": "Fuente de Origen",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Puntuación de Calificación",
+              "displayName": "Puntuación de Calificación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Propietario Asignado",
+              "displayName": "Propietario Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado en el Pipeline",
+              "displayName": "Estado en el Pipeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "En contacto",
+                  "value": "En contacto"
+                },
+                {
+                  "name": "Calificado",
+                  "value": "Calificado"
+                },
+                {
+                  "name": "Descartado",
+                  "value": "Descartado"
+                },
+                {
+                  "name": "Contacto Inicial",
+                  "value": "Contacto Inicial"
+                },
+                {
+                  "name": "Negociación",
+                  "value": "Negociación"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de Creación",
+              "displayName": "Fecha de Creación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Notas de Prospecto",
+              "displayName": "Notas de Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Interés Inicial",
+              "displayName": "Interés Inicial",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Bajo",
+                  "value": "Bajo"
+                },
+                {
+                  "name": "Medio",
+                  "value": "Medio"
+                },
+                {
+                  "name": "Alto",
+                  "value": "Alto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Clasificación IA",
+              "displayName": "Clasificación IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                },
+                {
+                  "name": "Urgente",
+                  "value": "Urgente"
+                },
+                {
+                  "name": "Normal",
+                  "value": "Normal"
+                },
+                {
+                  "name": "Baja Prioridad",
+                  "value": "Baja Prioridad"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Score IA",
+              "displayName": "Score IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Resumen IA",
+              "displayName": "Resumen IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Acción Recomendada",
+              "displayName": "Acción Recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado de Aprobación",
+              "displayName": "Estado de Aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Aprobado",
+                  "value": "Aprobado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado por",
+              "displayName": "Aprobado por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de aprobación",
+              "displayName": "Fecha de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Observaciones de aprobación",
+              "displayName": "Observaciones de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        -336
+      ],
+      "id": "4968a4b1-c3f3-41c4-9de5-5f7efef7eb3a",
+      "name": "Actualizar Airtable - APROBADO"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appVE7CMnAZF3f61F",
+          "mode": "list",
+          "cachedResultName": "PROTS CRM IA",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblmXZs8uPufWjXJf",
+          "mode": "list",
+          "cachedResultName": "Prospectos",
+          "cachedResultUrl": "https://airtable.com/appVE7CMnAZF3f61F/tblmXZs8uPufWjXJf"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Estado de Aprobación": "Rechazado",
+            "Puntuación de Calificación": 0,
+            "id": "={{ $('Airtable Prospectos').item.json.id }}",
+            "Observaciones de aprobación": "Prospecto rechazado por Gerencia",
+            "Fecha de aprobación": "={{ new Date().toISOString() }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre del Prospecto",
+              "displayName": "Nombre del Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Correo Electrónico",
+              "displayName": "Correo Electrónico",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Teléfono",
+              "displayName": "Teléfono",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fuente de Origen",
+              "displayName": "Fuente de Origen",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Puntuación de Calificación",
+              "displayName": "Puntuación de Calificación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Propietario Asignado",
+              "displayName": "Propietario Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Estado en el Pipeline",
+              "displayName": "Estado en el Pipeline",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Nuevo",
+                  "value": "Nuevo"
+                },
+                {
+                  "name": "En contacto",
+                  "value": "En contacto"
+                },
+                {
+                  "name": "Calificado",
+                  "value": "Calificado"
+                },
+                {
+                  "name": "Descartado",
+                  "value": "Descartado"
+                },
+                {
+                  "name": "Contacto Inicial",
+                  "value": "Contacto Inicial"
+                },
+                {
+                  "name": "Negociación",
+                  "value": "Negociación"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de Creación",
+              "displayName": "Fecha de Creación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "Notas de Prospecto",
+              "displayName": "Notas de Prospecto",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Interés Inicial",
+              "displayName": "Interés Inicial",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Bajo",
+                  "value": "Bajo"
+                },
+                {
+                  "name": "Medio",
+                  "value": "Medio"
+                },
+                {
+                  "name": "Alto",
+                  "value": "Alto"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Clasificación IA",
+              "displayName": "Clasificación IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "VIP",
+                  "value": "VIP"
+                },
+                {
+                  "name": "Urgente",
+                  "value": "Urgente"
+                },
+                {
+                  "name": "Normal",
+                  "value": "Normal"
+                },
+                {
+                  "name": "Baja Prioridad",
+                  "value": "Baja Prioridad"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Score IA",
+              "displayName": "Score IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Resumen IA",
+              "displayName": "Resumen IA",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Acción Recomendada",
+              "displayName": "Acción Recomendada",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Estado de Aprobación",
+              "displayName": "Estado de Aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pendiente",
+                  "value": "Pendiente"
+                },
+                {
+                  "name": "Aprobado",
+                  "value": "Aprobado"
+                },
+                {
+                  "name": "Rechazado",
+                  "value": "Rechazado"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Aprobado por",
+              "displayName": "Aprobado por",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Fecha de aprobación",
+              "displayName": "Fecha de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Observaciones de aprobación",
+              "displayName": "Observaciones de aprobación",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        160
+      ],
+      "id": "fb8ee6e1-e991-4901-a71c-69c1aaba5277",
+      "name": "Actualizar Airtable - RECHAZADO"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "IF - Validar Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Validar Datos": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slack Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable Prospectos": {
+      "main": [
+        [
+          {
+            "node": "Solicitar Aprobación Gerencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Procesar Respuesta OpenRouter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Respuesta OpenRouter": {
+      "main": [
+        [
+          {
+            "node": "Airtable Prospectos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Nuevo Prospecto": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Solicitar Aprobación Gerencia": {
+      "main": [
+        [
+          {
+            "node": "Prospecto Aprobado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prospecto Aprobado": {
+      "main": [
+        [
+          {
+            "node": "Actualizar Airtable - APROBADO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar Airtable - RECHAZADO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar correo al prospecto": {
+      "main": [
+        [
+          {
+            "node": "Slack Confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Airtable - APROBADO": {
+      "main": [
+        [
+          {
+            "node": "Enviar correo al prospecto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar Airtable - RECHAZADO": {
+      "main": [
+        [
+          {
+            "node": "Slack Confirmacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
